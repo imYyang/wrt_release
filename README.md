@@ -138,3 +138,11 @@ uci commit fwx
 ```
 
 命令执行完成后，OAF 即完成首次初始化并启动。
+
+## 10. 自动同步上游
+
+`Sync Upstream` 工作流每天北京时间 04:23 自动检查 `ZqinKing/wrt_release` 的 `main` 分支，也可在 Actions 页面手动运行。
+
+同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
+
+上游缺少必要的 AX6 配置、Wi-Fi 脚本结构不兼容或校验失败时，同步会停止，不推送不完整的结果。运行记录和错误可在 Actions 的 `Sync Upstream` 中查看。

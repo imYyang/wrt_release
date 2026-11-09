@@ -1,0 +1,69 @@
+name: Sync Upstream
+run-name: Sync upstream build sources (AX6 only)
+
+on:
+  schedule:
+    # 04:23 Asia/Shanghai, daily.
+    - cron: '23 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: main
+
+      - name: Import upstream build sources
+        id: upstream
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/ZqinKing/wrt_release.git
+          git fetch --depth=1 upstream main
+          upstream_sha=$(git rev-parse refs/remotes/upstream/main)
+          echo "sha=$upstream_sha" >> "$GITHUB_OUTPUT"
+          # Keep fork-owned workflows, policy script and README. Import the
+          # upstream build tree exactly, including removals, before filtering.
+          git restore --source=refs/remotes/upstream/main --staged --worktree -- build.sh wrt_core LICENSE .gitignore
+          python3 .github/scripts/keep_ax6.py
+
+      - name: Validate AX6 configurations
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n build.sh
+          sh -n wrt_core/patches/992_set-wifi-uci.sh
+          for model in redmi_ax6_immwrt redmi_ax6_libwrt; do
+            bash build.sh "$model" config_preview
+          done
+          git add -- build.sh wrt_core LICENSE .gitignore
+          git diff --cached --check
+
+      - name: Commit and push changes
+        env:
+          UPSTREAM_SHA: ${{ steps.upstream.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --cached --quiet; then
+            echo "Upstream build sources are already current." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Sync upstream build sources (${UPSTREAM_SHA:0:12}), retaining AX6 only"
+          # A concurrent update to main fails safely; never force-push.
+          git push origin HEAD:main
+          echo "Synced ZqinKing/wrt_release@$UPSTREAM_SHA with AX6-only policy." >> "$GITHUB_STEP_SUMMARY"
