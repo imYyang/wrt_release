@@ -77,6 +77,9 @@ def main():
             raise RuntimeError(f"Unexpected upstream Wi-Fi layout: {name}")
         functions.append(matches[0])
 
+    functions[0] = functions[0].replace(".disabled='0'", ".disabled='1'")
+    functions[1] = functions[1].replace("'Redmi_AX6_5G'", "'YangWrt'").replace("'Redmi_AX6'", "'YangWrt'")
+
     # Do not let new upstream devices reappear in the local build menu.
     for path in (core / "compilecfg").glob("*.ini"):
         if path.stem not in DEVICES:
@@ -86,6 +89,7 @@ def main():
             path.unlink()
 
     apply_package_policy(core)
+    apply_factory_defaults(core)
 
     wifi.write_text(
         '#!/bin/sh\n\nboard_name=$(cat /tmp/sysinfo/board_name)\n\n'
@@ -97,6 +101,37 @@ def main():
         encoding="utf-8",
         newline="\n",
     )
+
+
+def apply_factory_defaults(core):
+    update = core / "update.sh"
+    source = update.read_text(encoding="utf-8")
+    source, count = re.subn(r'^LAN_ADDR="[^"]*"$', 'LAN_ADDR="10.10.10.1"', source, flags=re.M)
+    if count != 1:
+        raise RuntimeError("Cannot locate upstream LAN_ADDR setting")
+    update.write_text(source, encoding="utf-8", newline="\n")
+
+    defaults = ROOT / ".github/defaults/9999_yangwrt_defaults"
+    (core / "patches/9999_yangwrt_defaults").write_bytes(defaults.read_bytes())
+    fixes = core / "modules/target_fixes.sh"
+    source = fixes.read_text(encoding="utf-8")
+    marker = '    # YangWrt factory defaults (managed by keep_ax6.py)'
+    if marker not in source:
+        anchor = '    install -Dm544 "$BASE_PATH/patches/992_set-wifi-uci.sh" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/992_set-wifi-uci.sh"'
+        if source.count(anchor) != 1:
+            raise RuntimeError("Cannot locate upstream default-settings installation")
+        block = '''
+    # YangWrt factory defaults (managed by keep_ax6.py)
+    install -Dm755 "$BASE_PATH/patches/9999_yangwrt_defaults" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/9999_yangwrt_defaults"
+    local dispatcher="$BUILD_DIR/feeds/luci/modules/luci-base/ucode/dispatcher.uc"
+    if [ ! -f "$dispatcher" ] || ! grep -qE "duser: '(root|admin)'" "$dispatcher"; then
+        echo "Error: unsupported LuCI default-login layout" >&2
+        return 1
+    fi
+    sed -i "s/duser: 'root'/duser: 'admin'/g" "$dispatcher"
+'''
+        source = source.replace(anchor, anchor + "\n" + block)
+    fixes.write_text(source, encoding="utf-8", newline="\n")
 
 
 if __name__ == "__main__":

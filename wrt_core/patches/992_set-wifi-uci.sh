@@ -21,7 +21,7 @@ set wireless.radio${radio}.mu_beamformer='1'
 set wireless.radio${radio}.country='US'
 set wireless.radio${radio}.txpower="${txpower}"
 set wireless.radio${radio}.cell_density='0'
-set wireless.radio${radio}.disabled='0'
+set wireless.radio${radio}.disabled='1'
 set wireless.default_radio${radio}.ssid="${ssid}"
 set wireless.default_radio${radio}.encryption="${encryption}"
 set wireless.default_radio${radio}.key="${key}"
@@ -35,8 +35,8 @@ EOF
 }
 
 redmi_ax6_wifi_cfg() {
-	configure_wifi 0 149 HE80 22 'Redmi_AX6_5G' '12345678'
-	configure_wifi 1 1 HE20 21 'Redmi_AX6' '12345678'
+	configure_wifi 0 149 HE80 22 'YangWrt' '12345678'
+	configure_wifi 1 1 HE20 21 'YangWrt' '12345678'
 }
 
 case "${board_name}" in

@@ -10,6 +10,16 @@ fix_default_set() {
     install -Dm544 "$BASE_PATH/patches/991_custom_settings" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/991_custom_settings"
     install -Dm544 "$BASE_PATH/patches/992_set-wifi-uci.sh" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/992_set-wifi-uci.sh"
 
+    # YangWrt factory defaults (managed by keep_ax6.py)
+    install -Dm755 "$BASE_PATH/patches/9999_yangwrt_defaults" "$BUILD_DIR/package/base-files/files/etc/uci-defaults/9999_yangwrt_defaults"
+    local dispatcher="$BUILD_DIR/feeds/luci/modules/luci-base/ucode/dispatcher.uc"
+    if [ ! -f "$dispatcher" ] || ! grep -qE "duser: '(root|admin)'" "$dispatcher"; then
+        echo "Error: unsupported LuCI default-login layout" >&2
+        return 1
+    fi
+    sed -i "s/duser: 'root'/duser: 'admin'/g" "$dispatcher"
+
+
     if [ -f "$BUILD_DIR/package/emortal/autocore/files/tempinfo" ]; then
         if [ -f "$BASE_PATH/patches/tempinfo" ]; then
             \cp -f "$BASE_PATH/patches/tempinfo" "$BUILD_DIR/package/emortal/autocore/files/tempinfo"

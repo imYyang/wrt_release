@@ -1,0 +1,59 @@
+#!/bin/sh
+# Apply factory defaults once. /etc/config is retained by sysupgrade.
+set -e
+
+if [ "$(uci -q get yangwrt.defaults.applied || true)" = "1" ]; then
+    exit 0
+fi
+
+. /lib/functions.sh
+
+set_hostname() {
+    uci set "system.$1.hostname=YangHome-Gateway"
+}
+
+disable_radio() {
+    uci set "wireless.$1.disabled=1"
+}
+
+set_ssid() {
+    uci set "wireless.$1.ssid=YangWrt"
+}
+
+uci set network.lan.proto='static'
+uci set network.lan.ipaddr='10.10.10.1'
+uci set network.lan.netmask='255.255.255.0'
+config_load system
+config_foreach set_hostname system
+
+# Wireless configuration is generated before uci-defaults on OpenWrt.
+# Keep the script for a later boot if that has not happened yet.
+[ -s /etc/config/wireless ]
+config_load wireless
+config_foreach disable_radio wifi-device
+config_foreach set_ssid wifi-iface
+
+uci set upnpd.config.enabled='1'
+uci set upnpd.config.enable_upnp='1'
+uci set upnpd.config.internal_iface='lan'
+
+# rpcd supports a standalone LuCI account with a crypt(3) password hash.
+# Factory Web UI password: admin. This does not rename the Unix root user.
+uci set rpcd.yangwrt_admin='login'
+uci set rpcd.yangwrt_admin.username='admin'
+uci set 'rpcd.yangwrt_admin.password=$6$YangWrt$Z8jKVKjoCq4iTJQiQuXbRbJlintJCKBJuzxiyO3yqws4v36PDy/nGsRzRf4dDAZ7gyJS0MpL1911SHmKee9TA/'
+uci -q delete rpcd.yangwrt_admin.read || true
+uci -q delete rpcd.yangwrt_admin.write || true
+uci add_list rpcd.yangwrt_admin.read='*'
+uci add_list rpcd.yangwrt_admin.write='*'
+
+for config in network system wireless upnpd rpcd; do
+    uci commit "$config"
+done
+/etc/init.d/miniupnpd enable
+
+touch /etc/config/yangwrt
+uci set yangwrt.defaults='settings'
+uci set yangwrt.defaults.applied='1'
+uci commit yangwrt
+exit 0
