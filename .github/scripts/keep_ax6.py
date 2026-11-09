@@ -106,7 +106,7 @@ def main():
 def apply_factory_defaults(core):
     update = core / "update.sh"
     source = update.read_text(encoding="utf-8")
-    source, count = re.subn(r'^LAN_ADDR="[^"]*"$', 'LAN_ADDR="10.10.10.1"', source, flags=re.M)
+    source, count = re.subn(r'^LAN_ADDR="[^"]*"$', 'LAN_ADDR="10.10.10.254"', source, flags=re.M)
     if count != 1:
         raise RuntimeError("Cannot locate upstream LAN_ADDR setting")
     update.write_text(source, encoding="utf-8", newline="\n")

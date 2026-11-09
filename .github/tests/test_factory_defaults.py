@@ -75,7 +75,7 @@ def main():
         subprocess.run([BASH, "-s"], input=script, text=True, env=env, check=True)
         state = json.loads(state_file.read_text())
         expected = {
-            "network.lan.ipaddr": "10.10.10.1", "network.lan.netmask": "255.255.255.0",
+            "network.lan.ipaddr": "10.10.10.254", "network.lan.netmask": "255.255.255.0",
             "system.cfg01.hostname": "YangHome-Gateway",
             "upnpd.config.enabled": "1", "upnpd.config.enable_upnp": "1",
             "rpcd.yangwrt_admin.username": "admin",

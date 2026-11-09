@@ -203,7 +203,7 @@ jobs:
           echo "Kernel: ${{ env.KVER }}" >> release_body.txt
           echo "设备名: YangHome-Gateway" >> release_body.txt
           echo "Wi-Fi: YangWrt，默认关闭（启用后密码: 12345678）" >> release_body.txt
-          echo "LAN地址: 10.10.10.1/24" >> release_body.txt
+          echo "LAN地址: 10.10.10.254/24" >> release_body.txt
           echo "Web UI: admin / admin" >> release_body.txt
           echo "UPnP: 默认开启" >> release_body.txt
           echo "KMOD归档: ${KMOD_ARCHIVE}" >> release_body.txt
