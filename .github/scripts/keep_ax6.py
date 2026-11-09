@@ -12,6 +12,8 @@ EXCLUDED_PACKAGES = {
     "luci-app-easytier", "luci-app-lucky", "luci-app-oaf", "luci-app-passwall",
     "luci-i18n-easytier-zh-cn", "luci-i18n-lucky-zh-cn",
     "luci-i18n-oaf-zh-cn", "luci-i18n-passwall-zh-cn",
+    "mosdns", "smartdns", "luci-app-mosdns", "luci-app-smartdns",
+    "luci-i18n-mosdns-zh-cn", "luci-i18n-smartdns-zh-cn",
 }
 
 

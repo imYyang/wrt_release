@@ -124,7 +124,7 @@ https://github.com/kenzok8/small-package.git
 
 ## 9. 插件裁剪
 
-两种 AX6 固件均不包含 EasyTier、Lucky、OAF 和 PassWall，相关 LuCI 界面和服务包已显式禁用，`proxy` 配置片段已移除。MosDNS 和 SmartDNS 暂时保留，AdGuard Home 尚未默认选中。
+两种 AX6 固件均不包含 EasyTier、Lucky、OAF、PassWall、MosDNS 和 SmartDNS，相关 LuCI 界面和服务包已显式禁用，`proxy` 配置片段已移除。AdGuard Home 尚未默认选中。
 
 软件源同步与兼容性修补仍沿用上游流程；拉取了插件源码不代表会编译进固件。
 
