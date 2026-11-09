@@ -54,7 +54,6 @@ cd wrt_release
 
 ```bash
 ADD_CONFIG_FRAGMENTS=docker_deps ./build.sh redmi_ax6_immwrt config_preview
-REMOVE_CONFIG_FRAGMENTS=proxy ./build.sh redmi_ax6_immwrt config_preview
 ```
 
 GitHub Actions 的手动构建也提供 `add_fragments` 与 `remove_fragments` 输入项，语义与上述环境变量一致。
@@ -95,7 +94,7 @@ GitHub Actions 的手动构建也提供 `add_fragments` 与 `remove_fragments` �
 
 默认片段由 `compilecfg/*.ini` 的 `CONFIG_FRAGMENTS` 指定：
 
-- 两种 AX6 配置默认按顺序包含 `nss`、`proxy`。
+- 两种 AX6 配置默认仅包含 `nss`。
 - `docker_deps` 默认不启用，可通过 `ADD_CONFIG_FRAGMENTS=docker_deps` 按需追加，用于预置手动安装 Docker 所需的运行依赖。
 
 `ADD_CONFIG_FRAGMENTS` 会在默认片段后追加，`REMOVE_CONFIG_FRAGMENTS` 会从最终片段中移除对应配置片段。移除只表示“不追加这个 fragment”，不会反向修改设备 `.config` 或 `compile_base.config` 中已经写明的配置。
@@ -123,26 +122,16 @@ https://github.com/kenzok8/small-package.git
 - `wrt_core/modules/`：模块化脚本，包括仓库准备、网络重试、feeds/custom_feed、源码修正、LuCI 修正、服务修正、验证、Docker、CUPS 等静态职责模块。
 - `wrt_core/patches/`：补丁、默认设置、Wi-Fi 初始化、NSS 诊断、PBR 规则和其他构建时注入文件。
 
-## 9. OAF（应用过滤）功能使用说明
+## 9. 插件裁剪
 
-当前固件默认禁用 OAF（应用过滤）功能，目的是规避 OAF 驱动可能对网络栈产生的影响。需要使用 OAF 的用户，请确认能够接受启用后的潜在影响。
+两种 AX6 固件均不包含 EasyTier、Lucky、OAF 和 PassWall，相关 LuCI 界面和服务包已显式禁用，`proxy` 配置片段已移除。MosDNS 和 SmartDNS 暂时保留，AdGuard Home 尚未默认选中。
 
-新版本更新后，首次启用 OAF 需要进入命令行模式（SSH 或串口）执行：
-
-```sh
-cd /etc/init.d/
-./appfilter start
-uci set fwx.record.enable=1
-uci commit fwx
-./appfilter start
-```
-
-命令执行完成后，OAF 即完成首次初始化并启动。
+软件源同步与兼容性修补仍沿用上游流程；拉取了插件源码不代表会编译进固件。
 
 ## 10. 自动同步上游
 
 `Sync Upstream` 工作流每天北京时间 04:23 自动检查 `ZqinKing/wrt_release` 的 `main` 分支，也可在 Actions 页面手动运行。
 
-同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
+同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，并重新应用上述插件裁剪策略，Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
 
 上游缺少必要的 AX6 配置、Wi-Fi 脚本结构不兼容或校验失败时，同步会停止，不推送不完整的结果。运行记录和错误可在 Actions 的 `Sync Upstream` 中查看。
