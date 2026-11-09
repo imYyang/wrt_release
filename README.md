@@ -124,7 +124,9 @@ https://github.com/kenzok8/small-package.git
 
 ## 9. 插件裁剪
 
-两种 AX6 固件均不包含 EasyTier、Lucky、OAF、PassWall、MosDNS 和 SmartDNS，相关 LuCI 界面和服务包已显式禁用，`proxy` 配置片段已移除。AdGuard Home 尚未默认选中。
+两种 AX6 固件均不包含 EasyTier、Lucky、OAF、PassWall、MosDNS、SmartDNS、KMS（vlmcsd）和 WoL 管理插件，相关配置已显式禁用，`proxy` 配置片段已移除。AdGuard Home 尚未默认选中。
+
+保留 NSS 版 SQM（`sqm-scripts-nss`）和 SQM 管理界面（`luci-app-sqm`）。主题继续使用 Vantage，不引入 neobird。
 
 软件源同步与兼容性修补仍沿用上游流程；拉取了插件源码不代表会编译进固件。
 

@@ -14,6 +14,8 @@ EXCLUDED_PACKAGES = {
     "luci-i18n-oaf-zh-cn", "luci-i18n-passwall-zh-cn",
     "mosdns", "smartdns", "luci-app-mosdns", "luci-app-smartdns",
     "luci-i18n-mosdns-zh-cn", "luci-i18n-smartdns-zh-cn",
+    "vlmcsd", "luci-app-vlmcsd", "luci-i18n-vlmcsd-zh-cn",
+    "luci-app-wol", "luci-i18n-wol-zh-cn",
 }
 
 
