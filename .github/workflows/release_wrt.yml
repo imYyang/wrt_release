@@ -8,27 +8,10 @@ on:
         required: true
         description: Device Model
         type: choice
-        default: jdcloud_ipq60xx_libwrt
+        default: redmi_ax6_libwrt
         options:
-          - aliyun_ap8220_immwrt
-          - aliyun_ap8220_libwrt
-          - cmcc_rax3000m_immwrt
-          - gemtek_w1701k_immwrt
-          - jdcloud_ax6000_immwrt
-          - jdcloud_ipq60xx_immwrt
-          - jdcloud_ipq60xx_libwrt
-          - link_nn6000v2_immwrt
-          - linksys_mx4x00_libwrt
-          - n1_immwrt
-          - qihoo_360v6_immwrt
-          - redmi_ax5_immwrt
           - redmi_ax6_immwrt
           - redmi_ax6_libwrt
-          - zn_m2_immwrt
-          - zn_m2_libwrt
-          - x64_immwrt
-          - supergateway_s20m_immwrt
-          - nokia_040g_immwrt
       add_fragments:
         required: false
         description: Add config fragments, comma separated
@@ -213,15 +196,6 @@ jobs:
           echo "KMOD_ARCHIVE=$archive_name" >> "$GITHUB_ENV"
           echo "Packaged $kmod_count kmod packages into $archive_name"
 
-      - name: Package OpenWrt Firmware
-        if: ${{ inputs.model == 'n1_immwrt' }}
-        uses: unifreq/openwrt_packit@8007d3efd49bb42aa20c5755a50af21dc7a438e1
-        env:
-          OPENWRT_ARMVIRT: firmware/*.tar.gz
-          PACKAGE_SOC: s905d
-          KERNEL_VERSION_NAME: 6.6.y
-          WHOAMI: ZqinKing
-
       - name: Prepare Release Body
         run: |
           echo "云编译发布" > release_body.txt
@@ -238,7 +212,7 @@ jobs:
         with:
           tag_name: ${{ env.BUILD_DATE }}_${{ inputs.model }}
           files: |
-            ${{ inputs.model == 'n1_immwrt' && env.PACKAGED_OUTPUTPATH || './firmware' }}/*.*
+            ./firmware/*.*
             ./kmods_*.tar.gz
           fail_on_unmatched_files: true
           body_path: ./release_body.txt
