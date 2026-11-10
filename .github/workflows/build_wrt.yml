@@ -21,6 +21,10 @@ on:
         description: Remove default config fragments, comma separated
         default: ""
 
+permissions:
+  contents: read
+  actions: write
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -126,6 +130,8 @@ jobs:
         run: ./build.sh ${{ inputs.model }}
 
       - name: Delete Old Cache
+        # Cache housekeeping must not prevent firmware upload.
+        continue-on-error: true
         run: |
           # 获取缓存列表并删除
           gh cache list --key ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do

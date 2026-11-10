@@ -21,6 +21,10 @@ on:
         description: Remove default config fragments, comma separated
         default: ""
 
+permissions:
+  contents: write
+  actions: write
+
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -133,6 +137,8 @@ jobs:
           echo "KVER=$(grep -oP "^kernel.*" ./firmware/*.manifest | grep -oP "[4-6]\.[0-9]{1,3}\.[0-9]{1,3}")" >> $GITHUB_ENV
 
       - name: Delete Old Cache
+        # Cache housekeeping must not prevent firmware publication.
+        continue-on-error: true
         run: |
           # 获取缓存列表并删除
           gh cache list --key ${{ matrix.os }}-${{ inputs.model }}-${{ hashFiles('**/repo_flag') }}- --json key --jq '.[] | .key' | while read -r key; do
