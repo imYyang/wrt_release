@@ -7,6 +7,11 @@ import re
 
 ROOT = Path(__file__).resolve().parents[2]
 DEVICES = {"redmi_ax6_immwrt", "redmi_ax6_libwrt"}
+REQUIRED_PACKAGES = {
+    "tailscale", "luci-app-firewall",
+    "frps", "luci-app-frps", "luci-i18n-frps-zh-cn",
+    "nlbwmon", "luci-app-nlbwmon", "luci-i18n-nlbwmon-zh-cn",
+}
 EXCLUDED_PACKAGES = {
     "easytier", "lucky", "oaf", "open-app-filter", "kmod-oaf",
     "luci-app-easytier", "luci-app-lucky", "luci-app-oaf", "luci-app-passwall",
@@ -16,12 +21,13 @@ EXCLUDED_PACKAGES = {
     "luci-i18n-mosdns-zh-cn", "luci-i18n-smartdns-zh-cn",
     "vlmcsd", "luci-app-vlmcsd", "luci-i18n-vlmcsd-zh-cn",
     "luci-app-wol", "luci-i18n-wol-zh-cn",
+    "vnstat2", "vnstati2", "luci-app-vnstat2", "luci-i18n-vnstat2-zh-cn",
 }
 
 
 def apply_package_policy(core):
-    # Remove upstream selections and plugin-specific build options everywhere,
-    # then explicitly disable the applications and their service packages.
+    # Remove upstream selections everywhere before applying the fork's required
+    # and excluded packages, including overrides in device configs/fragments.
     for path in (core / "deconfig").rglob("*.config"):
         lines = path.read_text(encoding="utf-8").splitlines()
         filtered = []
@@ -29,20 +35,21 @@ def apply_package_policy(core):
             match = re.match(r"(?:# )?CONFIG_PACKAGE_([^= ]+)", line)
             if match and any(
                 match[1] == package or match[1].startswith(package + "_")
-                for package in EXCLUDED_PACKAGES
+                for package in EXCLUDED_PACKAGES | REQUIRED_PACKAGES
             ):
                 continue
             if line.startswith("CONFIG_EASYTIER_"):
+                continue
+            if line in {"# Fork policy: required applications", "# Fork policy: excluded applications"}:
                 continue
             filtered.append(line)
         path.write_text("\n".join(filtered) + "\n", encoding="utf-8", newline="\n")
 
     base = core / "deconfig/compile_base.config"
     source = base.read_text(encoding="utf-8").rstrip()
-    marker = "# Fork policy: excluded applications"
-    if source.endswith(marker):
-        source = source[:-len(marker)].rstrip()
-    source += "\n\n" + marker + "\n"
+    source += "\n\n# Fork policy: required applications\n"
+    source += "".join(f"CONFIG_PACKAGE_{package}=y\n" for package in sorted(REQUIRED_PACKAGES))
+    source += "\n# Fork policy: excluded applications\n"
     source += "".join(f"CONFIG_PACKAGE_{package}=n\n" for package in sorted(EXCLUDED_PACKAGES))
     base.write_text(source, encoding="utf-8", newline="\n")
 

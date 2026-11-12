@@ -141,12 +141,26 @@ https://github.com/kenzok8/small-package.git
 
 保留 NSS 版 SQM（`sqm-scripts-nss`）和 SQM 管理界面（`luci-app-sqm`）。主题继续使用 Vantage，不引入 neobird。
 
+两种 AX6 配置均预装 Tailscale（`tailscale`）和防火墙管理界面（`luci-app-firewall`）。刷入新构建的固件后，通过 SSH 或网页终端执行以下命令，按输出链接登录自己的 Tailscale 账号：
+
+```sh
+/etc/init.d/tailscale enable
+/etc/init.d/tailscale start
+tailscale up
+```
+
+手动 NAT 端口映射位于“网络 → 防火墙 → 端口转发”：选择 TCP/UDP、外部端口、内网目标 IP 和内部端口，即可把公网端口转发给内网设备。该功能由防火墙提供，无需安装 NATMap；UPnP 自动映射仍由现有 `luci-app-upnp` 提供。
+
+两种 AX6 配置还预装 FRP 服务端（`frps`）、网页管理插件（`luci-app-frps`）和中文翻译（`luci-i18n-frps-zh-cn`）。刷入新构建的固件后，在 LuCI 的 FRPS 管理页面设置服务端监听端口、认证参数并启用服务，再按实际配置放行 WAN 入站端口；远端设备使用 FRP 客户端连接路由器的公网地址。
+
+两种 AX6 配置均包含按设备统计流量的 nlbwmon（`nlbwmon`）、网页管理插件（`luci-app-nlbwmon`）和中文翻译（`luci-i18n-nlbwmon-zh-cn`），替代 vnStat 2。NSS 硬件加速可能影响统计完整性，刷入后需结合实际流量验证。
+
 软件源同步与兼容性修补仍沿用上游流程；拉取了插件源码不代表会编译进固件。
 
 ## 10. 自动同步上游
 
 `Sync Upstream` 工作流每天北京时间 04:23 自动检查 `ZqinKing/wrt_release` 的 `main` 分支，也可在 Actions 页面手动运行。
 
-同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，并重新应用上述插件裁剪策略，Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
+同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，并重新应用上述插件裁剪策略，确保 Tailscale、防火墙管理界面、FRPS 服务端和中文管理插件及 nlbwmon 流量统计插件始终选中；Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
 
 上游缺少必要的 AX6 配置、Wi-Fi 脚本结构不兼容或校验失败时，同步会停止，不推送不完整的结果。运行记录和错误可在 Actions 的 `Sync Upstream` 中查看。
