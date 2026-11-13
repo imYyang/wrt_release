@@ -17,6 +17,7 @@ OVERLAY_PACKAGES = {
     "geo2txt", "v2ray-geoip", "v2ray-geosite",
 }
 EXCLUDED_PACKAGES = {
+    "luci-app-netwiz", "luci-i18n-netwiz-zh-cn",
     "easytier", "lucky", "oaf", "open-app-filter", "kmod-oaf",
     "luci-app-easytier", "luci-app-lucky", "luci-app-oaf", "luci-app-passwall",
     "luci-i18n-easytier-zh-cn", "luci-i18n-lucky-zh-cn",
@@ -102,6 +103,7 @@ def main():
             path.unlink()
 
     apply_package_policy(core)
+    remove_netwiz(core)
     apply_factory_defaults(core)
     apply_overlay_build_hook()
 
@@ -111,11 +113,33 @@ def main():
         + '\n\ncase "${board_name}" in\n'
         + 'redmi,ax6 | \\\n\tredmi,ax6-stock)\n\tredmi_ax6_wifi_cfg\n\t;;\n'
         + '*)\n\texit 0\n\t;;\nesac\n\n'
-        + 'uci commit wireless\n/etc/init.d/network restart\n',
+        + '# uci-defaults runs in S10boot, before S19dnsmasq and S20network.\n'
+        + '# Starting network here loses the interface event needed to enable DHCP.\n'
+        + '# Commit only; S20network will apply the configuration.\n'
+        + 'uci commit wireless\n',
         encoding="utf-8",
         newline="\n",
     )
 
+
+
+def remove_netwiz(core):
+    """Do not fetch, require or enable the first-run wizard after upstream sync."""
+    for relative in ("modules/custom_feed.sh", "modules/verify.sh"):
+        path = core / relative
+        source = path.read_text(encoding="utf-8")
+        source = re.sub(r'^.*https://github\.com/huchd0/luci-app-netwiz\.git.*\n', '', source, flags=re.M)
+        source = re.sub(r'\bluci-app-netwiz[ \t]+', '', source)
+        path.write_text(source, encoding="utf-8", newline="\n")
+
+    path = core / "modules/feed_source_fixes.sh"
+    source = path.read_text(encoding="utf-8")
+    source = re.sub(r'^fix_netwiz_permissions\(\) \{\n.*?^\}\n\n*', '', source, flags=re.M | re.S)
+    path.write_text(source, encoding="utf-8", newline="\n")
+    path = core / "update.sh"
+    source = path.read_text(encoding="utf-8")
+    source = re.sub(r'^[ \t]*fix_netwiz_permissions[ \t]*\n', '', source, flags=re.M)
+    path.write_text(source, encoding="utf-8", newline="\n")
 
 
 def apply_overlay_build_hook():

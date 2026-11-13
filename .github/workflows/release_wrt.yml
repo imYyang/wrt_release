@@ -62,6 +62,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7.0.0
 
+      - name: Validate boot defaults
+        run: |
+          python3 .github/tests/test_boot_policy.py
+          python3 .github/tests/test_factory_defaults.py
+          sh -n wrt_core/patches/992_set-wifi-uci.sh
+
       - name: Set Build Date and Timezone
         env:
           RAW_ADD_CONFIG_FRAGMENTS: ${{ inputs.add_fragments }}
@@ -133,6 +139,13 @@ jobs:
 
       - name: Include MosDNS offline packages
         run: cp mosdns-offline.tar.gz mosdns-overlay-packages.txt firmware/
+
+      - name: Verify wizard is absent from firmware
+        run: |
+          if grep -E '^luci-(app-netwiz|i18n-netwiz-[^ ]+) ' firmware/*.manifest; then
+            echo 'NetWiz must not be included in AX6 firmware' >&2
+            exit 1
+          fi
 
       - name: Get Kernel Verion
         run: |

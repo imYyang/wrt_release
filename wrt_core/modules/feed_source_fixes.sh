@@ -186,29 +186,6 @@ update_mosdns_deconfig() {
 }
 
 
-fix_netwiz_permissions() {
-    local package_dir="$(get_custom_feed_worktree_dir)/luci-app-netwiz"
-    local relative_path
-    local executable_files=(
-        root/usr/libexec/rpcd/netwiz root/usr/libexec/rpcd/netwiz_dev
-        root/usr/libexec/netwiz-autodetect.sh root/usr/libexec/netwiz-monitor-loop.sh
-        root/etc/init.d/netwiz-monitor root/etc/init.d/netwiz-recovery
-        root/etc/init.d/netwiz-watchdog root/etc/hotplug.d/dhcp/99-netwiz-guard
-    )
-
-    for relative_path in "${executable_files[@]}"; do
-        if [ ! -f "$package_dir/$relative_path" ]; then
-            echo "错误：luci-app-netwiz 执行文件不存在：$package_dir/$relative_path" >&2
-            return 1
-        fi
-        if ! chmod 755 "$package_dir/$relative_path"; then
-            echo "错误：无法设置 luci-app-netwiz 执行权限：$package_dir/$relative_path" >&2
-            return 1
-        fi
-    done
-}
-
-
 update_oaf_deconfig() {
     local init_path="$(get_custom_feed_worktree_dir)/open-app-filter/files/appfilter.init"
 

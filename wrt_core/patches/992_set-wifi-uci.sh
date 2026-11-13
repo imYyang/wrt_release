@@ -49,5 +49,7 @@ redmi,ax6 | \
 	;;
 esac
 
+# uci-defaults runs in S10boot, before S19dnsmasq and S20network.
+# Starting network here loses the interface event needed to enable DHCP.
+# Commit only; S20network will apply the configuration.
 uci commit wireless
-/etc/init.d/network restart

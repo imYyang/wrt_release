@@ -17,6 +17,8 @@
 
 首次连接请使用网线。默认设置脚本使用 `/etc/config/yangwrt` 标记，保留配置升级时不重置已修改的设置。
 
+不包含 NetWiz 快速引导，直接进入正常 LuCI 登录页面。Wi-Fi 初始化只写入配置，由系统正常启动网络；不在 `S10boot` 阶段提前重启 network，避免 LAN 就绪事件早于 dnsmasq 启动，导致首次开机不分配 IPv4 地址。
+
 推荐使用 Ubuntu LTS 或其他主流 Linux 发行版。OpenWrt 编译对磁盘空间、内存和文件系统大小写敏感性有要求，建议预留充足磁盘空间并在原生 Linux 文件系统中编译。
 
 ## 2. 安装编译依赖
@@ -137,7 +139,7 @@ https://github.com/kenzok8/small-package.git
 
 ## 9. 插件裁剪
 
-两种 AX6 固件均不包含 EasyTier、Lucky、OAF、PassWall、SmartDNS、KMS（vlmcsd）和 WoL 管理插件，相关配置已显式禁用，`proxy` 配置片段已移除。AdGuard Home 尚未默认选中。
+两种 AX6 固件均不包含 NetWiz 快速引导、EasyTier、Lucky、OAF、PassWall、SmartDNS、KMS（vlmcsd）和 WoL 管理插件，相关配置已显式禁用，`proxy` 配置片段已移除。AdGuard Home 尚未默认选中。
 
 保留 NSS 版 SQM（`sqm-scripts-nss`）和 SQM 管理界面（`luci-app-sqm`）。主题继续使用 Vantage，不引入 neobird。
 
