@@ -105,6 +105,7 @@ def main():
     apply_package_policy(core)
     remove_netwiz(core)
     apply_factory_defaults(core)
+    apply_status_menu_policy(core)
     apply_overlay_build_hook()
 
     wifi.write_text(
@@ -139,6 +140,19 @@ def remove_netwiz(core):
     path = core / "update.sh"
     source = path.read_text(encoding="utf-8")
     source = re.sub(r'^[ \t]*fix_netwiz_permissions[ \t]*\n', '', source, flags=re.M)
+    path.write_text(source, encoding="utf-8", newline="\n")
+
+
+def apply_status_menu_policy(core):
+    path = core / "update.sh"
+    source = path.read_text(encoding="utf-8")
+    marker = '    # YangWrt status menus (managed by keep_ax6.py)'
+    if marker not in source:
+        anchor = '    update_menu_location\n'
+        if source.count(anchor) != 1:
+            raise RuntimeError("Cannot locate upstream LuCI menu customization stage")
+        source = source.replace(anchor, anchor + marker + '\n'
+            + '    python3 "$BASE_PATH/../.github/scripts/prune_status_menus.py" "$BUILD_DIR/feeds/luci"\n')
     path.write_text(source, encoding="utf-8", newline="\n")
 
 

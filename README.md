@@ -19,6 +19,8 @@
 
 不包含 NetWiz 快速引导，直接进入正常 LuCI 登录页面。Wi-Fi 初始化只写入配置，由系统正常启动网络；不在 `S10boot` 阶段提前重启 network，避免 LAN 就绪事件早于 dnsmasq 启动，导致首次开机不分配 IPv4 地址。
 
+LuCI 菜单不显示“信道信息”和“WireGuard 状态”，Wi-Fi 信道设置和 WireGuard 接口配置仍可正常使用。
+
 推荐使用 Ubuntu LTS 或其他主流 Linux 发行版。OpenWrt 编译对磁盘空间、内存和文件系统大小写敏感性有要求，建议预留充足磁盘空间并在原生 Linux 文件系统中编译。
 
 ## 2. 安装编译依赖

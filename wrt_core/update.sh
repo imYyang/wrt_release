@@ -92,6 +92,8 @@ stage_pre_install_source_fixes() {
     set_build_signature
     update_nss_diag
     update_menu_location
+    # YangWrt status menus (managed by keep_ax6.py)
+    python3 "$BASE_PATH/../.github/scripts/prune_status_menus.py" "$BUILD_DIR/feeds/luci"
     fix_compile_coremark
     update_dnsmasq_conf
     add_backup_info_to_sysupgrade
