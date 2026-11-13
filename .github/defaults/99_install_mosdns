@@ -1,0 +1,7 @@
+#!/bin/sh
+[ "$(uci -q get yangwrt.defaults.mosdns_overlay_initialized)" = '1' ] && exit 0
+if /usr/sbin/yangwrt-install-mosdns > /tmp/yangwrt-mosdns-install.log 2>&1; then
+    exit 0
+fi
+logger -t yangwrt 'MosDNS installation failed; see /tmp/yangwrt-mosdns-install.log; will retry next boot'
+exit 1

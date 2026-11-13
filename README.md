@@ -137,7 +137,7 @@ https://github.com/kenzok8/small-package.git
 
 ## 9. 插件裁剪
 
-两种 AX6 固件均不包含 EasyTier、Lucky、OAF、PassWall、MosDNS、SmartDNS、KMS（vlmcsd）和 WoL 管理插件，相关配置已显式禁用，`proxy` 配置片段已移除。AdGuard Home 尚未默认选中。
+两种 AX6 固件均不包含 EasyTier、Lucky、OAF、PassWall、SmartDNS、KMS（vlmcsd）和 WoL 管理插件，相关配置已显式禁用，`proxy` 配置片段已移除。AdGuard Home 尚未默认选中。
 
 保留 NSS 版 SQM（`sqm-scripts-nss`）和 SQM 管理界面（`luci-app-sqm`）。主题继续使用 Vantage，不引入 neobird。
 
@@ -155,12 +155,22 @@ tailscale up
 
 两种 AX6 配置均包含按设备统计流量的 nlbwmon（`nlbwmon`）、网页管理插件（`luci-app-nlbwmon`）和中文翻译（`luci-i18n-nlbwmon-zh-cn`），替代 vnStat 2。NSS 硬件加速可能影响统计完整性，刷入后需结合实际流量验证。
 
+### 可卸载的 MosDNS
+
+两种 AX6 固件将 MosDNS、LuCI 管理界面和中文翻译编译为独立 IPK（`=m`），连同缺少的依赖打包；它们不属于固件内置软件包。首次开机无需联网，由初始化脚本将离线包安装到可写 overlay，默认不启用 MosDNS、不接管现有 DNS。安装日志在 `/tmp/yangwrt-mosdns-install.log`，失败会在下次启动重试。
+
+进入“服务 → MosDNS”配置后启用。在“系统 → 软件包”卸载 `luci-i18n-mosdns-zh-cn`、`luci-app-mosdns` 和 `mosdns`；仅在确认没有其他软件使用时再卸载规则库等依赖。卸载运行文件可释放可写层空间，固件只读层中的离线安装包仍占空间。恢复出厂后会重新安装。
+
+保留配置升级会保留“已经安装过”的标记，尊重手动卸载的决定，不会强行重装。由于 overlay 软件包不会自动保留，升级后如需重新安装，SSH 执行 `yangwrt-install-mosdns`，然后刷新 LuCI 页面；这也可用于卸载后重新安装。
+
+每个 Release 同时提供 `mosdns-offline.tar.gz` 和 `mosdns-overlay-packages.txt`，安装包严格来自该次固件构建，勿跨固件混装。固件 `.manifest` 仅列出内置包，MosDNS 的 overlay 包单独列在上述清单中。本流程当前要求 opkg（`CONFIG_USE_APK=n`），构建时会检查包管理器、所需模块、依赖及 MosDNS 未被固化到只读镜像，否则停止发布。
+
 软件源同步与兼容性修补仍沿用上游流程；拉取了插件源码不代表会编译进固件。
 
 ## 10. 自动同步上游
 
 `Sync Upstream` 工作流每天北京时间 04:23 自动检查 `ZqinKing/wrt_release` 的 `main` 分支，也可在 Actions 页面手动运行。
 
-同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，并重新应用上述插件裁剪策略，确保 Tailscale、防火墙管理界面、FRPS 服务端和中文管理插件及 nlbwmon 流量统计插件始终选中；Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
+同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，并重新应用上述插件裁剪策略，确保 Tailscale、防火墙管理界面、FRPS 服务端和中文管理插件及 nlbwmon 流量统计插件始终选中，MosDNS 保持独立模块并重新注入 overlay 离线安装构建步骤；Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
 
 上游缺少必要的 AX6 配置、Wi-Fi 脚本结构不兼容或校验失败时，同步会停止，不推送不完整的结果。运行记录和错误可在 Actions 的 `Sync Upstream` 中查看。

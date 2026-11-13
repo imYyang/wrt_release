@@ -12,13 +12,17 @@ REQUIRED_PACKAGES = {
     "frps", "luci-app-frps", "luci-i18n-frps-zh-cn",
     "nlbwmon", "luci-app-nlbwmon", "luci-i18n-nlbwmon-zh-cn",
 }
+OVERLAY_PACKAGES = {
+    "mosdns", "luci-app-mosdns", "luci-i18n-mosdns-zh-cn",
+    "geo2txt", "v2ray-geoip", "v2ray-geosite",
+}
 EXCLUDED_PACKAGES = {
     "easytier", "lucky", "oaf", "open-app-filter", "kmod-oaf",
     "luci-app-easytier", "luci-app-lucky", "luci-app-oaf", "luci-app-passwall",
     "luci-i18n-easytier-zh-cn", "luci-i18n-lucky-zh-cn",
     "luci-i18n-oaf-zh-cn", "luci-i18n-passwall-zh-cn",
-    "mosdns", "smartdns", "luci-app-mosdns", "luci-app-smartdns",
-    "luci-i18n-mosdns-zh-cn", "luci-i18n-smartdns-zh-cn",
+    "smartdns", "luci-app-smartdns",
+    "luci-i18n-smartdns-zh-cn",
     "vlmcsd", "luci-app-vlmcsd", "luci-i18n-vlmcsd-zh-cn",
     "luci-app-wol", "luci-i18n-wol-zh-cn",
     "vnstat2", "vnstati2", "luci-app-vnstat2", "luci-i18n-vnstat2-zh-cn",
@@ -35,12 +39,12 @@ def apply_package_policy(core):
             match = re.match(r"(?:# )?CONFIG_PACKAGE_([^= ]+)", line)
             if match and any(
                 match[1] == package or match[1].startswith(package + "_")
-                for package in EXCLUDED_PACKAGES | REQUIRED_PACKAGES
+                for package in EXCLUDED_PACKAGES | REQUIRED_PACKAGES | OVERLAY_PACKAGES
             ):
                 continue
             if line.startswith("CONFIG_EASYTIER_"):
                 continue
-            if line in {"# Fork policy: required applications", "# Fork policy: excluded applications"}:
+            if line in {"# Fork policy: required applications", "# Fork policy: excluded applications", "# Fork policy: removable overlay applications"}:
                 continue
             filtered.append(line)
         path.write_text("\n".join(filtered) + "\n", encoding="utf-8", newline="\n")
@@ -49,6 +53,8 @@ def apply_package_policy(core):
     source = base.read_text(encoding="utf-8").rstrip()
     source += "\n\n# Fork policy: required applications\n"
     source += "".join(f"CONFIG_PACKAGE_{package}=y\n" for package in sorted(REQUIRED_PACKAGES))
+    source += "\n# Fork policy: removable overlay applications\n"
+    source += "".join(f"CONFIG_PACKAGE_{package}=m\n" for package in sorted(OVERLAY_PACKAGES))
     source += "\n# Fork policy: excluded applications\n"
     source += "".join(f"CONFIG_PACKAGE_{package}=n\n" for package in sorted(EXCLUDED_PACKAGES))
     base.write_text(source, encoding="utf-8", newline="\n")
@@ -97,6 +103,7 @@ def main():
 
     apply_package_policy(core)
     apply_factory_defaults(core)
+    apply_overlay_build_hook()
 
     wifi.write_text(
         '#!/bin/sh\n\nboard_name=$(cat /tmp/sysinfo/board_name)\n\n'
@@ -108,6 +115,21 @@ def main():
         encoding="utf-8",
         newline="\n",
     )
+
+
+
+def apply_overlay_build_hook():
+    build = ROOT / "build.sh"
+    source = build.read_text(encoding="utf-8")
+    marker = "# YangWrt removable MosDNS (managed by keep_ax6.py)"
+    if marker not in source:
+        anchor = 'make -j$(($(nproc) + 1)) || make -j1 V=s'
+        if source.count(anchor) != 1:
+            raise RuntimeError("Cannot locate upstream firmware build command")
+        source = source.replace(anchor, anchor + '\n\n' + marker + '\n'
+            + 'python3 "$REPO_ROOT/.github/scripts/mosdns_overlay.py" "$PWD"\n'
+            + 'make -j$(($(nproc) + 1)) || make -j1 V=s\n')
+    build.write_text(source, encoding="utf-8", newline="\n")
 
 
 def apply_factory_defaults(core):

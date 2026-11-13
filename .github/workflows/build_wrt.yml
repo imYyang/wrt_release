@@ -129,6 +129,9 @@ jobs:
           REMOVE_CONFIG_FRAGMENTS: ${{ inputs.remove_fragments }}
         run: ./build.sh ${{ inputs.model }}
 
+      - name: Include MosDNS offline packages
+        run: cp mosdns-offline.tar.gz mosdns-overlay-packages.txt firmware/
+
       - name: Delete Old Cache
         # Cache housekeeping must not prevent firmware upload.
         continue-on-error: true

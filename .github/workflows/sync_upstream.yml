@@ -48,6 +48,9 @@ jobs:
           sh -n wrt_core/patches/9999_yangwrt_defaults
           bash -n wrt_core/modules/target_fixes.sh
           python3 .github/tests/test_factory_defaults.py
+          python3 .github/tests/test_mosdns_overlay.py
+          sh -n .github/defaults/install_mosdns
+          sh -n .github/defaults/99_install_mosdns
           for model in redmi_ax6_immwrt redmi_ax6_libwrt; do
             bash build.sh "$model" config_preview
           done

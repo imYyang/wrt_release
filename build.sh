@@ -458,6 +458,11 @@ fi
 make download -j$(($(nproc) * 2))
 make -j$(($(nproc) + 1)) || make -j1 V=s
 
+# YangWrt removable MosDNS (managed by keep_ax6.py)
+python3 "$REPO_ROOT/.github/scripts/mosdns_overlay.py" "$PWD"
+make -j$(($(nproc) + 1)) || make -j1 V=s
+
+
 FIRMWARE_DIR="$BASE_PATH/../firmware"
 \rm -rf "$FIRMWARE_DIR"
 mkdir -p "$FIRMWARE_DIR"

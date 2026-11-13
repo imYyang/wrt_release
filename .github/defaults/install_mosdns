@@ -1,0 +1,15 @@
+#!/bin/sh
+# Install into the writable overlay, never into the read-only squashfs package set.
+set -e
+bundle=/usr/share/yangwrt/mosdns-packages
+command -v opkg >/dev/null
+cd "$bundle"
+sha256sum -c SHA256SUMS
+opkg install "$bundle/"*.ipk
+# Keep the one-time decision under /etc/config so retained-config upgrades
+# respect an intentional uninstall. Manual invocation always reinstalls.
+touch /etc/config/yangwrt
+uci -q get yangwrt.defaults >/dev/null || uci set yangwrt.defaults='settings'
+uci set yangwrt.defaults.mosdns_overlay_initialized='1'
+uci commit yangwrt
+logger -t yangwrt 'MosDNS installed in writable overlay; configure before enabling'
