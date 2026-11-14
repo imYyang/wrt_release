@@ -65,6 +65,7 @@ jobs:
       - name: Validate boot defaults
         run: |
           python3 .github/tests/test_boot_policy.py
+          python3 .github/tests/test_upnp_fullcone.py
           python3 .github/tests/test_factory_defaults.py
           sh -n wrt_core/patches/992_set-wifi-uci.sh
 

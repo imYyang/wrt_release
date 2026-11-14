@@ -13,7 +13,7 @@
 | Web UI 账号 / 密码 | `admin` / `admin`（独立 LuCI 管理账号） |
 | Wi-Fi 名称 | 两个频段均为 `YangWrt` |
 | Wi-Fi 状态 | 默认关闭；手动开启后原有密码为 `12345678` |
-| UPnP | 默认开启 |
+| UPnP | 默认开启，SOAP/HTTP 监听端口 37215，上下行带宽通告留空 |
 
 首次连接请使用网线。默认设置脚本使用 `/etc/config/yangwrt` 标记，保留配置升级时不重置已修改的设置。
 
@@ -178,3 +178,9 @@ tailscale up
 同步范围为 `build.sh`、`wrt_core/`、`LICENSE` 和 `.gitignore`，以上游版本为准；本仓库的工作流、同步策略脚本和 README 独立维护。每次同步都会重新移除其他设备配置，并重新应用上述插件裁剪策略，确保 Tailscale、防火墙管理界面、FRPS 服务端和中文管理插件及 nlbwmon 流量统计插件始终选中，MosDNS 保持独立模块并重新注入 overlay 离线安装构建步骤；Wi-Fi 初始化仅保留 AX6 / AX6 stock，并验证两种 AX6 配置预览。仅在内容变化时提交到 `main`，不自动触发固件编译。
 
 上游缺少必要的 AX6 配置、Wi-Fi 脚本结构不兼容或校验失败时，同步会停止，不推送不完整的结果。运行记录和错误可在 Actions 的 `Sync Upstream` 中查看。
+
+### UPnP 与 Full Cone NAT
+
+构建在同步 miniupnpd 软件包后，将其 nftables DNAT 入口从 `chain-post/dstnat` 移到 `chain-pre/dstnat`。这样先执行明确的 UPnP 映射，再执行 WAN Full Cone NAT，避免 Full Cone 提前结束 NAT 检查而跳过映射。保留 Full Cone 和现有 UPnP 安全模式，不增加固定端口放行。每日上游同步会重新注入修复；软件包布局不兼容时停止构建。
+
+保留配置升级不会重置 DHCP 绑定、UPnP 监听端口等用户设置。此修复针对外网入站，内网使用公网域名仍需单独配置 NAT 回环或内网 DNS。

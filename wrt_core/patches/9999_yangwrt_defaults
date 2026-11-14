@@ -36,6 +36,10 @@ config_foreach set_ssid wifi-iface
 uci set upnpd.config.enabled='1'
 uci set upnpd.config.enable_upnp='1'
 uci set upnpd.config.internal_iface='lan'
+uci set upnpd.config.port='37215'
+# These values advertise link speed; they are not traffic shaping limits.
+uci -q delete upnpd.config.upload || true
+uci -q delete upnpd.config.download || true
 
 # rpcd supports a standalone LuCI account with a crypt(3) password hash.
 # Factory Web UI password: admin. This does not rename the Unix root user.

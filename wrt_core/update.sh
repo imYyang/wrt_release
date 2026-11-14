@@ -74,6 +74,7 @@ stage_pre_install_source_fixes() {
     update_homeproxy
     fix_default_set
     fix_miniupnpd
+    python3 "$BASE_PATH/../.github/scripts/fix_upnp_fullcone.py" "$BUILD_DIR"
     update_golang
     change_dnsmasq2full
     fix_mk_def_depends
